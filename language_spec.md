@@ -38,7 +38,7 @@ $$\dfrac{ }{\Gamma |- True :Bool}$$
 
 $$\dfrac{ }{\Gamma |- False :Bool}$$
 
-$$\dfrac{ }{\Gamma |- int_literal :Int}$$
+$$\dfrac{ }{\Gamma |- int\_literal :Int}$$
 
 $$\dfrac{ op \in \{+,-,*,/ \} }{\Gamma |- op : (Int ->Int->Int) }$$
 
