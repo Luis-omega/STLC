@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "STLC"
+version = "0.0.1"
+dependencies = [
+]
+
+[metadata]
+name = "STLC"
+version = "0.0.1"
+
+#[project.scripts]
+#stlc = "STLC.Compiler.Main:main"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = [
+  "."
+]
+log_cli = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["STLC"]  # alternatively: `exclude = ["additional*"]`
+namespaces = false
+
+
+[tool.black]
+line-length = 80
+target-version = ['py311']
