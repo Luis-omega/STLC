@@ -14,7 +14,7 @@ expression : variable
 variable_character : "a" | ... | "z" | "A" | ... | "Z"
 variable : "_" variable_character+ | variable_character+
 
-literal : bool_literal | int_literal
+literal : bool_literal | int_literal | "unit"
 
 bool_literal : True | False
 
@@ -22,7 +22,7 @@ int_literal : 0 | 1 | -1 | 2 | -2 | ...
 
 operator: "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "&" | "|" |"~"
 
-type : "Bool" | "Int" | "(" type "->" type ")"
+type : "Bool" | "Int" | "Unit" | "(" type "->" type ")"
 
 variable_definition : variable "=" expression
 variable_declaration : variable ":" type
@@ -40,6 +40,8 @@ $$\dfrac{ }{\Gamma |- False :Bool}$$
 
 $$\dfrac{ }{\Gamma |- int literal :Int}$$
 
+$$\dfrac{ }{\Gamma |- unit :Unit}$$
+
 $$\dfrac{ op \in \{+,-,*,/ \} }{\Gamma |- op : (Int ->Int->Int) }$$
 
 $$\dfrac{ op \in \{<,>,<=,>=,==\} }{\Gamma |- op : (Int->Int->Bool)}$$
@@ -56,6 +58,15 @@ $$\dfrac{\Gamma |- (e:t) }{\Gamma |- ((e:t):t) }$$
 
 
 ## Evaluation rules
-
 TODO
+
+$$\dfrac{}{True => True}$$
+
+$$\dfrac{}{False => False}$$
+
+$$\dfrac{}{int literal => int literal}$$
+
+$$\dfrac{}{unit => unit}$$
+
+$$\dfrac{Env[x := y]}{x => y}$$
 
