@@ -77,7 +77,7 @@ def is_variable_char(stream:str)->bool:
             return False
         case _ :
             char = stream[0]
-            return "a"<= char or char <= "z" or "A" <=char or char <="Z"
+            return ("a"<= char and char <= "z") or ("A" <=char and char <="Z")
 
 def variable(stream:str)->Optional[tuple[str,TokenVariable]]:
     match stream :
@@ -87,7 +87,7 @@ def variable(stream:str)->Optional[tuple[str,TokenVariable]]:
             if is_variable_char(stream[0]) or stream[0]=="_" :
                 acc = [stream[0]]
                 stream = stream[1:]
-                while (is_variable_char(stream[0])) :
+                while (stream and is_variable_char(stream[0])) :
                     acc.append(stream[0])
                     stream = stream[1:]
                 return (stream,TokenVariable("".join(acc)))
@@ -127,7 +127,7 @@ def uint(stream:str)->Optional[tuple[str,int]]:
             if is_non_zero_digit(stream[0]):
                 acc = [stream[0]]
                 stream = stream[1:]
-                while (is_digit(stream[0])) :
+                while (stream and is_digit(stream[0])) :
                     acc.append(stream[0])
                     stream = stream[1:]
                 return (stream,(int("".join(acc))))
@@ -148,7 +148,7 @@ def int_(stream:str)->Optional[tuple[str,TokenInt]]:
                     return None
                 else:
                     (new_stream,value) = maybe_value
-                    return (new_stream,TokenInt(value))
+                    return (new_stream,TokenInt(-value))
             else:
                 maybe_value = uint(stream)
                 if maybe_value is None:
@@ -178,7 +178,7 @@ def string_with(stream:str,to_lex:str,get_value:Callable[[str],T])->Optional[tup
                 return None
             
 def operator(stream:str)->Optional[tuple[str,Operator]]:
-    for op in ["+","-","*","/","<", ">" , "<=" , ">=" , "==" , "&" , "|" ,"~"]:
+    for op in ["+","-","*","/","<=" , ">=","<", ">"  , "==" , "&" , "|" ,"~"]:
         maybe_lexed = string_with(stream,op,Operator)
         if maybe_lexed is not None:
             return maybe_lexed
