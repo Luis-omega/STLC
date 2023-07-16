@@ -82,3 +82,4 @@ def test_operator_positive(stream:str,expected: Operator):
     ])
 def test_operator_negative(stream:str):
     make_negative_test(stream,operator)
+

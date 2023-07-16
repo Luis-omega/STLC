@@ -1,7 +1,29 @@
 from dataclasses import dataclass
-from typing import Optional,TypeVar,Callable
+from typing import Optional,TypeVar,Callable,Union
 
 T = TypeVar("T")
+
+Token = Union[
+    "TokenVariable",
+    "TokenBool",
+    "TokenInt",
+    "TokenUnit",
+    "LParen",
+    "RParen",
+    "LambdaStart",
+    "Arrow",
+    "If",
+    "Then",
+    "Else",
+    "Colon",
+    "Operator",
+    "Equal",
+    "TokenTypeBool",
+    "TokenTypeInt",
+    "TokenTypeUnit",
+    "TokenEOF",
+    "TokenError",
+        ]
 
 @dataclass
 class TokenVariable:
@@ -70,6 +92,14 @@ class TokenTypeUnit:
 @dataclass
 class Equal:
     pass
+
+@dataclass
+class TokenEOF:
+    pass
+
+@dataclass
+class TokenError:
+    msg: str
 
 def is_variable_char(stream:str)->bool:
     match stream:
@@ -184,19 +214,77 @@ def operator(stream:str)->Optional[tuple[str,Operator]]:
             return maybe_lexed
     return None
 
-boolTrue = lambda stream: string(stream,"True",TokenBool(True))
-boolFalse = lambda stream: string(stream,"False",TokenBool(False))
-rparen = lambda stream: string(stream,"(",RParen())
-lparen = lambda stream: string(stream,")",LParen())
-lambdaStart = lambda stream: string(stream,"\\",LambdaStart())
-arrow = lambda stream: string(stream,"->",Arrow())
-if_ = lambda stream: string(stream,"if",If())
-else_ = lambda stream: string(stream,"else",Else())
-then = lambda stream: string(stream,"then",Then())
-colon = lambda stream: string(stream,":",Colon())
-boolType = lambda stream: string(stream,"Bool",TokenTypeBool())
-intType = lambda stream: string(stream,"Int",TokenTypeInt())
-unitType = lambda stream: string(stream,"Unit",TokenTypeUnit())
-equal = lambda stream: string(stream,"=",Equal())
+boolTrue:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"True",TokenBool(True))
+boolFalse:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"False",TokenBool(False))
+unit:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"unit",TokenUnit())
+rparen:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"(",RParen())
+lparen:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,")",LParen())
+lambdaStart:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"\\",LambdaStart())
+arrow:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"->",Arrow())
+if_:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"if",If())
+else_:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"else",Else())
+then:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"then",Then())
+colon:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,":",Colon())
+boolType:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"Bool",TokenTypeBool())
+intType:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"Int",TokenTypeInt())
+unitType:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"Unit",TokenTypeUnit())
+equal:Callable[[str],Optional[tuple[str,Token]]] = lambda stream: string(stream,"=",Equal())
  
-# TODO: Implement `one of` and use it to define the lexer
+
+def spaces(stream:str)->str:
+    while (stream and stream[0]==" "):
+        stream = stream[1:]
+    return stream
+
+
+def one_of(stream:str,functions:list[Callable[[str],Optional[tuple[str,Token]]]])->Optional[tuple[str,Token]]:
+    match functions:
+        case [] : 
+            return None
+        case _ :
+            for f in functions:
+                result = f(stream)
+                if result is not None:
+                    return result
+            return None
+
+def lexer(stream:str)->list[Token]:
+    lexers : list[Callable[[str],Optional[tuple[str,Token]]]] = [
+        boolTrue,
+        boolFalse,
+        unit,
+        rparen,
+        lparen,
+        lambdaStart,
+        arrow,
+        if_,
+        else_,
+        then,
+        colon,
+        boolType,
+        intType,
+        unitType,
+        equal,
+        variable,
+        int_,
+        operator
+            ]
+    acc : list[Token] = []
+    while stream :
+        result = one_of(stream,lexers)
+        if result is None:
+            if len(stream)>0:
+                acc.append(TokenError(stream[0]))
+            else:
+                acc.append(TokenEOF())
+            break
+        else :
+            stream,value = result 
+            acc.append(value)
+            stream = spaces(stream)
+    if len(acc)==0:
+        return [TokenEOF()]
+    return acc
+
+print(lexer("\\ x -> x +1 * unit Int Bool "))
+
