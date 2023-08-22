@@ -9,7 +9,6 @@ expression : variable
     |"\" variable "->"  expression
     | "(" expression operator expression ")"
     | "if" expression "then" expression "else" expression
-    | "(" expression ":" type ")"
 
 variable_character : "a" | ... | "z" | "A" | ... | "Z"
 variable : "_" variable_character+ | variable_character+
@@ -26,6 +25,20 @@ type : "Bool" | "Int" | "Unit" | "(" type "->" type ")"
 
 variable_definition : variable "=" expression
 variable_declaration : variable ":" type
+```
+
+## Factorized Grammar for expression
+
+```ebnf
+expression : variable
+    | literal 
+    | "(" expression expression_paren
+    |"\" variable "->"  expression
+    | "if" expression "then" expression "else" expression
+
+expression_paren :  expression ")"
+    | operator expression ")"
+    | ":" type ")"
 ```
 
 ## Typing rules 
