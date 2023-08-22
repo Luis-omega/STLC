@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from typing import Union
 
-Literal = Union["BoolLiteral" | "IntLiteral" | "UnitLiteral"]
+Literal = Union["BoolLiteral" , "IntLiteral" , "UnitLiteral"]
 Expression = Union[
-    "Variable" | "Literal" | "Application" | "Function" | "If" | "Annotation"
+    "Variable" , "Literal" , "Application" , "Function" , "If" , "Annotation"
 ]
-Type = Union["BoolType" | "IntType" | "UnitType" | "Arrow"]
+Type = Union["BoolType" , "IntType" , "UnitType" , "Arrow"]
 
 
 @dataclass
@@ -36,7 +36,7 @@ class Application:
 
 @dataclass
 class Function:
-    argument: str
+    argument: Variable
     expression: Expression
 
 

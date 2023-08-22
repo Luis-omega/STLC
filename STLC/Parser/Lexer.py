@@ -256,11 +256,11 @@ boolFalse: Callable[[str], Optional[tuple[str, Token]]] = lambda stream: string(
 unit: Callable[[str], Optional[tuple[str, Token]]] = lambda stream: string(
     stream, "unit", TokenUnit()
 )
-rparen: Callable[[str], Optional[tuple[str, Token]]] = lambda stream: string(
-    stream, "(", RParen()
-)
 lparen: Callable[[str], Optional[tuple[str, Token]]] = lambda stream: string(
-    stream, ")", LParen()
+    stream, "(", LParen()
+)
+rparen: Callable[[str], Optional[tuple[str, Token]]] = lambda stream: string(
+    stream, ")", RParen()
 )
 lambdaStart: Callable[
     [str], Optional[tuple[str, Token]]
