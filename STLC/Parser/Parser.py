@@ -93,9 +93,9 @@ lparen: Parser[Lexer.LParen] = constantLexer2Ast(Lexer.LParen)
 rparen: Parser[Lexer.RParen] = constantLexer2Ast(Lexer.RParen)
 lambdaStar: Parser[Lexer.LambdaStart] = constantLexer2Ast(Lexer.LambdaStart)
 arrow: Parser[Lexer.Arrow] = constantLexer2Ast(Lexer.Arrow)
-if_lexer: Parser[Lexer.if_] = constantLexer2Ast(Lexer.If)
-then: Parser[Lexer.then] = constantLexer2Ast(Lexer.Then)
-else_: Parser[Lexer.else_] = constantLexer2Ast(Lexer.Else)
+if_lexer: Parser[Lexer.If] = constantLexer2Ast(Lexer.If)
+then: Parser[Lexer.Then] = constantLexer2Ast(Lexer.Then)
+else_: Parser[Lexer.Else] = constantLexer2Ast(Lexer.Else)
 
 application: Parser[Application] = bind(
     lparen,
