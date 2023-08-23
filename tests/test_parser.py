@@ -26,7 +26,7 @@ def make_positive_test(stream: str, parser: Parser[T], expected: T) -> None:
         ("(a b)", expression, Application(Variable("a"), Variable("b"))),
         ("\\ x -> 2", expression, Function(Variable("x"), IntLiteral(2))),
         (
-            "\\ y -> (z 4)",
+            "\\ y -> (z @)",
             expression,
             Function(Variable("y"), Application(Variable("z"), IntLiteral(4))),
         ),
