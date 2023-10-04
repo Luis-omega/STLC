@@ -63,7 +63,7 @@ $$\dfrac{ op \in \{<,>,<=,>=,==\} }{\Gamma \vdash op : (Int->Int->Bool)}$$
 \dfrac{ op \in \{ \& ,|,~\} }{\Gamma \vdash op : (Bool->Bool->Bool)}
 ```
 
-$$\dfrac{\Gamma, e_1 : t_1 \vdash e_2 : t_2 }{\Gamma \vdash (\ e_1 ->  e_2 ) : (t_1 -> t_2) }$$
+$$\dfrac{\Gamma, x : t_1 \vdash e : t_2 }{\Gamma (\vdash x ->  e ) : (t_1 -> t_2) }$$
 
 $$\dfrac{\Gamma \vdash e_1 : (t_1 -> t_2)   \qquad \qquad \qquad \Gamma \vdash e_2 : t_1 }{\Gamma \vdash ( e_1 e_2 ) : t_2 }$$
 
