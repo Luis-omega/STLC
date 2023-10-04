@@ -72,6 +72,40 @@ $$\dfrac{\Gamma \vdash e_1 : Bool \qquad \qquad \Gamma \vdash e_2 : t \qquad \qq
 $$\dfrac{\Gamma \vdash (e:t) }{\Gamma \vdash ((e:t):t) }$$
 
 
+## Free variables
+
+$$Free(x) = \{ x \}$$
+
+$$Free(literal) = \emptyset$$
+
+$$Free((e_1 e_2)) = Free(e_1) \cup Free(e_2)$$
+
+$$Free(\textbackslash x -> e ) = Free(e) \textbackslash \{ x \}$$
+
+$$Free(e_1 op e_2) = Free(e_1) \cup Free(e_2)$$
+
+$$Free(if e_1 then e_2 else e_3) = Free(e_1) \cup Free(e_2) \cup Free(e_3)$$
+
+
+## Substitution
+
+Note that the definition is partial, is not completely defined for abstraction
+
+- $x[x := r] = r$
+
+- $y[x := r] = y$ if $x \neq y$ 
+
+- $(e_1 e_2)[x:=r] = ((e_1[ x:= r])(e_2[x:=r]))$
+
+- $(\ x -> e)[x:=r] = (\x->e)$
+
+- $(\ y -> e)[x:=r] = (\y -> e[x:=r])$ provided $x \neq y$ and $y \notin Free(r)$
+
+- $(e_1 op e_2)[x:=r] = ((e_1[x:=r]) op (e_2[x:=r]))$
+
+- $(if e_1 then e_2 else e_3)[x:=r] = if e_1[x:=r] then e_2[x:=r] else e_3[x:=r]$
+
+
 ## Evaluation rules
 TODO
 
