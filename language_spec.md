@@ -59,7 +59,9 @@ $$\dfrac{ op \in \{+,-,*,/ \} }{\Gamma |- op : (Int ->Int->Int) }$$
 
 $$\dfrac{ op \in \{<,>,<=,>=,==\} }{\Gamma |- op : (Int->Int->Bool)}$$
 
-$$\dfrac{ op \in \{ \& ,|,~\} }{\Gamma |- op : (Bool->Bool->Bool)}$$
+```math
+\dfrac{ op \in \{ \& ,|,~\} }{\Gamma |- op : (Bool->Bool->Bool)}
+```
 
 $$\dfrac{\Gamma, e_1 : t_1 |- e_2 : t_2 }{\Gamma |- (\ e_1 ->  e_2 ) : (t_1 -> t_2) }$$
 
