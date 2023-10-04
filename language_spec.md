@@ -45,7 +45,7 @@ expression_paren :  expression ")"
 
 We use $\Gamma$ as a set of "x:t" .
 
-$$\dfrac{ v:t \in \Gamma }{\Gamma |- v:t}$$
+$$\dfrac{ v:t \in \Gamma }{\Gamma \vdash v:t}$$
 
 $$\dfrac{ }{\Gamma |- True :Bool}$$
 
