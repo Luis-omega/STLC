@@ -97,9 +97,9 @@ Note that the definition is partial, is not completely defined for abstraction
 
 - $(e_1 e_2)[x:=r] = ((e_1[ x:= r])(e_2[x:=r]))$
 
-- $(\ x -> e)[x:=r] = (\x->e)$
+- $(\textbackslash x -> e)[x:=r] = (\x->e)$
 
-- $(\ y -> e)[x:=r] = (\y -> e[x:=r])$ provided $x \neq y$ and $y \notin Free(r)$
+- $(\textbackslash y -> e)[x:=r] = (\y -> e[x:=r])$ provided $x \neq y$ and $y \notin Free(r)$
 
 - $(e_1 op e_2)[x:=r] = ((e_1[x:=r]) op (e_2[x:=r]))$
 
