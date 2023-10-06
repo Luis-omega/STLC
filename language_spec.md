@@ -56,20 +56,20 @@ $$\dfrac{ }{\Gamma \vdash int literal :Int}$$
 $$\dfrac{ }{\Gamma \vdash unit :Unit}$$
 
 ```math
-\dfrac{ op \in \{+,-,*,/ \} }{\Gamma \vdash op : (Int ->Int->Int) }
+\dfrac{ op \in \{+,-,*,/ \} \qquad \qquad \Gamma \vdash (e_1:Int) \qquad \qquad \Gamma \vdash (e_2:Int) }{\Gamma \vdash (e_1 \, op \, e_2:Int) }
 ```
 
 ```math
-\dfrac{ op \in \{<,>,<=,>=,==\} }{\Gamma \vdash op : (Int->Int->Bool)}
+\dfrac{ op \in \{<,>,<=,>=,==\} \qquad \qquad \Gamma \vdash (e_1:Int) \qquad \qquad \Gamma \vdash (e_2:Int) }{\Gamma \vdash (e_1 \, op \, e_2:Bool)}
 ```
 
 ```math
-\dfrac{ op \in \{ \& ,|,~\} }{\Gamma \vdash op : (Bool->Bool->Bool)}
+\dfrac{ op \in \{ \& ,|,~\}  \qquad \qquad \Gamma \vdash (e_1:Bool) \qquad \qquad \Gamma \vdash (e_2:Bool)}{\Gamma \vdash (e_1 \, op \, e_2 : Bool)}
 ```
 
 $$\dfrac{\Gamma, x : t_1 \vdash e : t_2 }{\Gamma \vdash (\textbackslash x ->  e ) : (t_1 -> t_2) }$$
 
-$$\dfrac{\Gamma \vdash e_1 : (t_1 -> t_2)   \qquad \qquad \qquad \Gamma \vdash e_2 : t_1 }{\Gamma \vdash ( e_1 e_2 ) : t_2 }$$
+$$\dfrac{\Gamma \vdash e_1 : (t_1 -> t_2)   \qquad \qquad \qquad \Gamma \vdash e_2 : t_1 }{\Gamma \vdash ( e_1 \, e_2 ) : t_2 }$$
 
 $$\dfrac{\Gamma \vdash e_1 : Bool \qquad \qquad \Gamma \vdash e_2 : t \qquad \qquad \Gamma \vdash e_3 : t  }{\Gamma \vdash (if \quad e_1 \quad then \quad e_2 \quad else \quad e_3) : t }$$
 
@@ -101,13 +101,13 @@ $$Free(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3) = Free(e_1) \cup 
 
 - $y[x := r] = y$ if $x \neq y$ 
 
-- $(e_1 e_2)[x:=r] = ((e_1[ x:= r])(e_2[x:=r]))$
+- $(e_1 \, e_2)[x:=r] = ((e_1[ x:= r])(e_2[x:=r]))$
 
 - $(\textbackslash x -> e)[x:=r] = (\textbackslash x->e)$
 
 - $(\textbackslash y -> e)[x:=r] = (\textbackslash y -> (e[y:=z])[x:=r])$ provided $x \neq y$ and $z \notin Free(e)$
 
-- $(e_1 op e_2)[x:=r] = ((e_1[x:=r]) op (e_2[x:=r]))$
+- $(e_1 \, op \, e_2)[x:=r] = ((e_1[x:=r]) \, op \, (e_2[x:=r]))$
 
 - $(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3)[x:=r] = if e_1[x:=r] then e_2[x:=r] else e_3[x:=r]$
 
@@ -115,8 +115,6 @@ $$Free(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3) = Free(e_1) \cup 
 ## Evaluation rules
 
 Let $E$ be a set of definitions `variable = expression`. 
-
-We would assume that for every $(x = e) \in E$ the $Free(e)$ are all defined in $E$. 
 
 $V$ denotes the set of values, this means that it contains `True,False,unit,0,1,-1,-2,...`, lambda expressions of the form `\ x -> e` and operator expressions `v_1 op v_2` where $v_1,v_2 \in V$ .
 
@@ -132,13 +130,13 @@ $$\dfrac{}{(\ x -> e,E) => (\ x -> e,E)}$$
 
 $$\dfrac{(x=e) \in E }{(x,E) => (e,E)}$$
 
-$$\dfrac{(y,E) => (e,E)}{(x y,E) => (x e,E)}$$
+$$\dfrac{(y,E) => (e,E)}{(x \, y,E) => (x \, e,E)}$$
 
-$$\dfrac{v \in V \qquad (x=\ y -> e) \in E}{(x v,E) => (e[y:=v],E)}$$
+$$\dfrac{v \in V \qquad (x=\ y -> e) \in E}{(x \, v,E) => (e[y:=v],E)}$$
 
-$$\dfrac{(x,E) => (e,E)}{((x op y),E) => (e op y,E)}$$
+$$\dfrac{(x,E) => (e,E)}{((x \, op \, y),E) => (e \, op \, y,E)}$$
 
-$$\dfrac{v \in V \qquad (y,E) => (e,E)}{((v op y),E) => (v op e,E)}$$
+$$\dfrac{v \in V \qquad (y,E) => (e,E)}{((v \, op \, y),E) => (v \, op \, e,E)}$$
 
 $$\dfrac{(e_1,E) => (e_4 ,E)}{(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3, E) =>(if \quad e_4 \quad then \quad e_2 \quad else \quad e_3, E) }$$
 
