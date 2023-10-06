@@ -55,9 +55,13 @@ $$\dfrac{ }{\Gamma \vdash int literal :Int}$$
 
 $$\dfrac{ }{\Gamma \vdash unit :Unit}$$
 
-$$\dfrac{ op \in \{+,-,*,/ \} }{\Gamma \vdash op : (Int ->Int->Int) }$$
+```math
+\dfrac{ op \in \{+,-,*,/ \} }{\Gamma \vdash op : (Int ->Int->Int) }
+```
 
-$$\dfrac{ op \in \{<,>,<=,>=,==\} }{\Gamma \vdash op : (Int->Int->Bool)}$$
+```math
+\dfrac{ op \in \{<,>,<=,>=,==\} }{\Gamma \vdash op : (Int->Int->Bool)}
+```
 
 ```math
 \dfrac{ op \in \{ \& ,|,~\} }{\Gamma \vdash op : (Bool->Bool->Bool)}
@@ -67,24 +71,28 @@ $$\dfrac{\Gamma, x : t_1 \vdash e : t_2 }{\Gamma \vdash (\textbackslash x ->  e 
 
 $$\dfrac{\Gamma \vdash e_1 : (t_1 -> t_2)   \qquad \qquad \qquad \Gamma \vdash e_2 : t_1 }{\Gamma \vdash ( e_1 e_2 ) : t_2 }$$
 
-$$\dfrac{\Gamma \vdash e_1 : Bool \qquad \qquad \Gamma \vdash e_2 : t \qquad \qquad \Gamma \vdash e_3 : t  }{\Gamma \vdash (if e_1 then e_2 else e_3) : t }$$
+$$\dfrac{\Gamma \vdash e_1 : Bool \qquad \qquad \Gamma \vdash e_2 : t \qquad \qquad \Gamma \vdash e_3 : t  }{\Gamma \vdash (if \quad e_1 \quad then \quad e_2 \quad else \quad e_3) : t }$$
 
 $$\dfrac{\Gamma \vdash (e:t) }{\Gamma \vdash ((e:t):t) }$$
 
 
 ## Free variables
 
-$$Free(x) = \{ x \}$$
+```math
+Free(x) = \{x\}
+```
 
 $$Free(literal) = \emptyset$$
 
 $$Free((e_1 e_2)) = Free(e_1) \cup Free(e_2)$$
 
-$$Free(\textbackslash x -> e ) = Free(e) \textbackslash \{ x \}$$
+```math
+Free(\textbackslash x -> e ) = Free(e) \textbackslash \{x\}
+```
 
 $$Free(e_1 op e_2) = Free(e_1) \cup Free(e_2)$$
 
-$$Free(if e_1 then e_2 else e_3) = Free(e_1) \cup Free(e_2) \cup Free(e_3)$$
+$$Free(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3) = Free(e_1) \cup Free(e_2) \cup Free(e_3)$$
 
 
 ## Substitution
@@ -101,16 +109,14 @@ $$Free(if e_1 then e_2 else e_3) = Free(e_1) \cup Free(e_2) \cup Free(e_3)$$
 
 - $(e_1 op e_2)[x:=r] = ((e_1[x:=r]) op (e_2[x:=r]))$
 
-- $(if e_1 then e_2 else e_3)[x:=r] = if e_1[x:=r] then e_2[x:=r] else e_3[x:=r]$
+- $(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3)[x:=r] = if e_1[x:=r] then e_2[x:=r] else e_3[x:=r]$
 
 
 ## Evaluation rules
 
 Let $E$ be a set of definitions `variable = expression`. 
 
-We would assume that for every $(x = e) \in E$ the $Free(x)$ are all defined in $E$. 
-
-Let $E[x]$ denote that $x$ is defined in $E$ with definition $E[x]$.
+We would assume that for every $(x = e) \in E$ the $Free(e)$ are all defined in $E$. 
 
 $V$ denotes the set of values, this means that it contains `True,False,unit,0,1,-1,-2,...`, lambda expressions of the form `\ x -> e` and operator expressions `v_1 op v_2` where $v_1,v_2 \in V$ .
 
@@ -134,8 +140,8 @@ $$\dfrac{(x,E) => (e,E)}{((x op y),E) => (e op y,E)}$$
 
 $$\dfrac{v \in V \qquad (y,E) => (e,E)}{((v op y),E) => (v op e,E)}$$
 
-$$\dfrac{(e_1,E) => (e_4 ,E)}{(if e_1 then e_2 else e_3, E) =>(if e_4 then e_2 else e_3, E) }$$
+$$\dfrac{(e_1,E) => (e_4 ,E)}{(if \quad e_1 \quad then \quad e_2 \quad else \quad e_3, E) =>(if \quad e_4 \quad then \quad e_2 \quad else \quad e_3, E) }$$
 
-$$\dfrac{}{(if True then e_2 else e_3, E) =>(e_2, E) }$$
+$$\dfrac{}{(if \quad True \quad then \quad e_2 \quad else \quad e_3, E) =>(e_2, E) }$$
 
-$$\dfrac{}{(if False then e_2 else e_3, E) =>(e_3, E) }$$
+$$\dfrac{}{(if \quad False \quad then \quad e_2 \quad else \quad e_3, E) =>(e_3, E) }$$
