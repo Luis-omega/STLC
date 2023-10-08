@@ -7,8 +7,8 @@ COMMENT_REST_OF_LINE: /#[^\n]*/
 %ignore COMMENT_REST_OF_LINE
 
 
-TRUE : "True"
-FALSE : "False"
+TRUE.2 : "True"
+FALSE.2 : "False"
 
 INT_LITERAL.2 : /-?[1-9][0-9_]*/ 
 
@@ -16,9 +16,9 @@ BOOL : "Bool"
 INT_TYPE : "Int" 
 UNIT_TYPE : "Unit"
 
-IF : "if"
-THEN : "then"
-ELSE : "else"
+IF.2 : "if"
+THEN.2 : "then"
+ELSE.2 : "else"
 
 LAMBDA : "\\"
 
@@ -46,58 +46,67 @@ OR : "|"
 NOT : "~"
 
 
-variable : VARIABLE_CHARACTER+
+variable : VARIABLE_CHARACTER
 
 
-expression_atom : variable
-  | INT_LITERAL 
-  | TRUE
-  | FALSE
-  | LAMBDA variable ARROW expression
-  | IF expression THEN expression ELSE expression
-  | LPAREN expression RPAREN
-  | LPAREN expression COLON type RPAREN
+expression_atom : variable -> expression_atom_variable
+  | INT_LITERAL  -> expression_atom_int
+  | TRUE -> expression_atom_true
+  | FALSE -> expression_atom_false 
+  | LAMBDA variable ARROW _expression -> expression_atom_lambda
+  | IF _expression THEN _expression ELSE _expression -> expression_atom_if
+  | LPAREN _expression RPAREN -> expression_atom_parens
+  | LPAREN _expression COLON _type RPAREN -> expression_atom_annotation
 
-expression_application : expression_atom 
+expression_application : expression_atom -> expression_application_single
   | expression_atom expression_atom+
 
 _expression_operator{operators,next_expression}: next_expression (operators next_expression)+
   | next_expression
 
-multiplicative_operators: DIV | STAR
+_multiplicative_operators: DIV | STAR
 
-expression_multiplicative: _expression_operator{multiplicative_operators,expression_application}
+_expression_multiplicative: _expression_operator{_multiplicative_operators,expression_application}
 
-additive_operators: PLUS | MINUS
+_additive_operators: PLUS | MINUS
 
-expression_additive: _expression_operator{additive_operators, expression_multiplicative}
+_expression_additive: _expression_operator{_additive_operators, _expression_multiplicative}
 
-expression_order : expression_additive (LEQ | GEQ | LE | GE) expression_additive
-  | expression_additive
-
-
-comparative_operators: CMP | NEQ
-expression_comparative : _expression_operator{comparative_operators, expression_order}
-
-expression_not :  _expression_operator{NOT,expression_comparative}
+// This one has to be done by hand to forbid multiple uses of 
+// comparation operators at parsing time
+_order_operators : LEQ | GEQ | LE | GE
+_expression_order : _expression_additive _order_operators _expression_additive
+  | _expression_additive
 
 
-expression_and : _expression_operator{AND, expression_not}
+_comparative_operators: CMP | NEQ
+_expression_comparative : _expression_operator{_comparative_operators, _expression_order}
 
-expression_or : _expression_operator{OR,expression_and}
+_expression_not :  _expression_operator{NOT,_expression_comparative}
 
-expression : expression_or
+_expression_and : _expression_operator{AND, _expression_not}
 
-type_arrow : type ARROW type
-  | LPAREN type RPAREN
+_expression_or : _expression_operator{OR,_expression_and}
 
-type : BOOL | INT_TYPE | UNIT_TYPE | type_arrow
+_expression : _expression_or
 
-variable_declaration : variable COLON type SEMICOLON
+type_arrow : _type ARROW _type
+
+type_parens: LPAREN _type RPAREN
+
+type_bool: BOOL
+
+type_int: INT_TYPE
+
+type_unit: UNIT_TYPE
+
+_type : type_bool | type_int | type_unit | type_parens | type_arrow
+
+variable_declaration : variable COLON _type SEMICOLON
 
 variables : variable+
 
-variable_definition : variable EQUAL expression SEMICOLON
-  | variable variables EQUAL expression SEMICOLON
+variable_definition : variable EQUAL _expression SEMICOLON -> variable_definition_alone
+  | variable variables EQUAL _expression SEMICOLON
 
 top : (variable_declaration | variable_definition)*

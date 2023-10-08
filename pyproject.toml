@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "STLC"
 version = "0.0.1"
 dependencies = [
+  "lark"
 ]
 
 [metadata]
@@ -24,10 +25,10 @@ pythonpath = [
 ]
 log_cli = false
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["STLC"]  # alternatively: `exclude = ["additional*"]`
-namespaces = false
+#[tool.setuptools.packages.find]
+#where = ["."]
+#include = ["STLC"]  # alternatively: `exclude = ["additional*"]`
+#namespaces = false
 
 
 [tool.black]

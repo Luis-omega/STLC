@@ -1,5 +1,7 @@
 from pathlib import Path
 from argparse import ArgumentParser
+from pprint import pprint
+
 
 from lark import Lark
 
@@ -10,6 +12,8 @@ from STLC.Parser.Parser import (
     LarkLoadError,
     ParserError,
 )
+
+from STLC.Parser.Transformation import ToAST
 
 
 def from_file(symbols: list[str], path: Path) -> None:
@@ -34,14 +38,12 @@ def from_string(symbols: list[str], value: str) -> None:
         return
     print(40 * "-", "Lark Tree", 40 * "-", "\n")
     print(parsed.pretty())
-    # tranformed = ToSST().transform(parsed)
-    # print(40 * "-", "Transformed pprint", 40 * "-", "\n")
-    # pprint(tranformed)
-    # print(40 * "-", "Transformed doc", 40 * "-", "\n")
-    # doc = tranformed.to_document(defaultSettings)
-    # pprint(doc)
-    # print(40 * "-", "Transformed pretty", 40 * "-", "\n")
-    # print(pretty_as_console(doc))
+    tranformed = ToAST().transform(parsed)
+    print(40 * "-", "Transformed pprint", 40 * "-", "\n")
+    pprint(tranformed)
+    print(40 * "-", "Transformed pretty", 40 * "-", "\n")
+    for i in tranformed:
+        print(i.pretty())
 
 
 def generate_arg_parser():

@@ -1,6 +1,8 @@
 from typing import Optional
 from pathlib import Path
 from dataclasses import dataclass
+from importlib.resources import files
+
 
 from lark import (
     Lark,
@@ -9,7 +11,7 @@ from lark import (
     Token,
 )
 
-from STLC.STLCError import STLCError
+from STLC.Error import STLCError
 
 
 class ParserStageError(STLCError):
@@ -40,28 +42,27 @@ def load_grammar(
 ) -> LoadGrammarError | LarkLoadError | Lark:
     if debug is None:
         debug = False
-    grammarPath = "STLC/Parser/Grammar.lark"
+    grammarPath = "Parser/Grammar.lark"
     if start_symbols is None:
         start_symbols = ["top"]
     try:
-        with open(grammarPath, "r") as grammarFile:
-            grammar = grammarFile.read()
-            try:
-                parser = Lark(
-                    grammar,
-                    start=start_symbols,
-                    debug=debug,
-                    cache=None,
-                    propagate_positions=False,
-                    maybe_placeholders=True,
-                    keep_all_tokens=True,
-                    parser="lalr",
-                    lexer="basic",
-                )
-            except Exception as e:
-                return LarkLoadError(str(e))
+        grammar = files("STLC").joinpath(grammarPath).read_text()
     except OSError:
         return LoadGrammarError()
+    try:
+        parser = Lark(
+            grammar,
+            start=start_symbols,
+            debug=debug,
+            cache=None,
+            propagate_positions=False,
+            maybe_placeholders=True,
+            keep_all_tokens=True,
+            parser="lalr",
+            lexer="basic",
+        )
+    except Exception as e:
+        return LarkLoadError(str(e))
     return parser
 
 
