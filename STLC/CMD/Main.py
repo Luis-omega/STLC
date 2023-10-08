@@ -17,8 +17,12 @@ from STLC.Parser.Transformation import ToAST
 
 
 def from_file(symbols: list[str], path: Path) -> None:
-    with open(path, "r") as f:
-        content = f.read()
+    try:
+        with open(path, "r") as f:
+            content = f.read()
+    except OSError:
+        print("Can't open or read file: ", path)
+        return None
     from_string(symbols, content)
 
 
@@ -61,7 +65,7 @@ def generate_arg_parser():
         metavar="Lark_rule",
         help="The rule to apply",
     )
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "-i",
         "--inline",
@@ -83,7 +87,6 @@ def generate_arg_parser():
 
 def main():
     args = generate_arg_parser()
-    print(args)
 
     if args.symbol is not None:
         symbols = args.symbol
