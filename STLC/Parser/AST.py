@@ -145,4 +145,4 @@ class Declaration(HasRange):
     _type: Type
 
     def pretty(self) -> str:
-        return f"{self.name} = {self._type.pretty()};"
+        return f"{self.name} : {self._type.pretty()};"
