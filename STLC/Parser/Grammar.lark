@@ -28,15 +28,15 @@ ARROW : "->"
 COLON : ":"
 SEMICOLON  : ";"
 EQUAL : "="
-LPAR : "("
-RPAR : ")"
+LPAREN : "("
+RPAREN : ")"
 
 PLUS : "+"
 MINUS : "-"
 STAR : "*"
 DIV :"/"
-LESS: "<"
-MORE: ">"
+LE: "<"
+GE: ">"
 LEQ.2 : "<=" 
 GEQ.2 : ">="
 CMP.2 : "=="
@@ -61,36 +61,37 @@ expression_atom : variable
 expression_application : expression_atom 
   | expression_atom expression_atom+
 
-expression_operator{operators,next_expression}: next_expression (operators next_expression)+
+_expression_operator{operators,next_expression}: next_expression (operators next_expression)+
   | next_expression
 
 multiplicative_operators: DIV | STAR
 
-expression_multiplicative: expression_operator{multiplicative_operators,expression_application}
+expression_multiplicative: _expression_operator{multiplicative_operators,expression_application}
 
 additive_operators: PLUS | MINUS
 
-expression_additive: expression_operator{additive_operators, expression_multiplicative}
+expression_additive: _expression_operator{additive_operators, expression_multiplicative}
 
-expression_order : expression_additive (LEQ | GEQ) expression_additive
+expression_order : expression_additive (LEQ | GEQ | LE | GE) expression_additive
   | expression_additive
 
 
 comparative_operators: CMP | NEQ
-expression_comparative : expression_operator{comparative_operators, expression_order}
-  | expression_order
+expression_comparative : _expression_operator{comparative_operators, expression_order}
 
-expression_not :  expression_operator{NOT,expression_comparative}
+expression_not :  _expression_operator{NOT,expression_comparative}
 
 
-expression_and : expression_operator{AND, expression_not}
+expression_and : _expression_operator{AND, expression_not}
 
-expression_or : expression_operator{OR,expression_and}
+expression_or : _expression_operator{OR,expression_and}
 
 expression : expression_or
 
-type_arrow : type (ARROW type)+
-type : BOOl | INT_TYPE | UNIT_TYPE | type_arrow
+type_arrow : type ARROW type
+  | LPAREN type RPAREN
+
+type : BOOL | INT_TYPE | UNIT_TYPE | type_arrow
 
 variable_declaration : variable COLON type SEMICOLON
 
@@ -98,3 +99,5 @@ variables : variable+
 
 variable_definition : variable EQUAL expression SEMICOLON
   | variable variables EQUAL expression SEMICOLON
+
+top : (variable_declaration | variable_definition)*

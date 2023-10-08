@@ -12,8 +12,8 @@ dependencies = [
 name = "STLC"
 version = "0.0.1"
 
-#[project.scripts]
-#stlc = "STLC.Compiler.Main:main"
+[project.scripts]
+stlc = "STLC.CMD.Main:main"
 
 [tool.pytest.ini_options]
 addopts = [
