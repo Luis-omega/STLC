@@ -1,6 +1,30 @@
 # STLC
 Simple typed lambda calculus with recursion in python
 
+## Install
+
+Use pip to install it from the repository (stlc package is not available in pypy yet).
+
+```bash
+pip install git+https://github.com/Luis-omega/STLC.git
+```
+
+## Usage 
+
+After installation you have available the command `stlc` 
+
+To try a single string:
+
+```bash
+stlc -i "a=b;"
+```
+
+To try a full file:
+
+```bash
+stlc -f filename 
+```
+
 # Language Spec
 
 ## Gammar for core language
