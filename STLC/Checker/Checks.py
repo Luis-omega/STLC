@@ -19,6 +19,14 @@ from STLC.Parser.AST import (
 from STLC.Range import Range
 
 T = TypeVar("T")
+CheckError = Union[
+    "DeclarationNotFollowedByDefinition",
+    "DefinitionWithoutDeclaration",
+    "MultipleDefinition",
+    "MultipleDeclaration",
+    "UseOfUndefinedVariable",
+    "Shadowing",
+]
 
 
 parserResult = list[Definition | Declaration]
@@ -28,7 +36,7 @@ Declarations = dict[str, Declaration]
 
 
 def range2Report(r: Range) -> str:
-    return f"""At line {r.line_start}, column {r.column_start}."""
+    return f"""At line {r.line_start}, column {r.column_start}"""
 
 
 @dataclass
@@ -53,7 +61,7 @@ class MultipleDefinition:
 
     def pretty(self) -> str:
         places = "\n".join([range2Report(i._range) for i in self.definitions])
-        return f"""Multiple definitions for "{self.definitions[0].name}" found.\n{places}"""
+        return f"""Multiple definitions for "{self.definitions[0].name}" found.\n{places}."""
 
 
 @dataclass
@@ -62,7 +70,7 @@ class MultipleDeclaration:
 
     def pretty(self) -> str:
         places = "\n".join([range2Report(i._range) for i in self.declarations])
-        return f"""Multiple declarations for "{self.declarations[0].name}" found.\n{places}"""
+        return f"""Multiple declarations for "{self.declarations[0].name}" found.\n{places}."""
 
 
 @dataclass
@@ -71,7 +79,7 @@ class UseOfUndefinedVariable:
     definition: Definition
 
     def pretty(self) -> str:
-        return f"""Use of the undefined variable "{self.variable.name}" {range2Report(self.variable._range)} in declaration of "{self.definition.name}" {range2Report(self.definition._range)}"""
+        return f"""Use of the undefined variable "{self.variable.name}" {range2Report(self.variable._range)} in declaration of "{self.definition.name}" {range2Report(self.definition._range)}."""
 
 
 @dataclass
@@ -86,15 +94,12 @@ class Shadowing:
             msg = "Defined " + "\n".join(
                 [range2Report(i._range) for i in self.place]
             )
-        return f"""The variable "{self.variable.name}" {range2Report(self.variable._range)} is shadowing the previous introduction of the variable: \n{msg}"""
+        return f"""The variable "{self.variable.name}" {range2Report(self.variable._range)} is shadowing the previous introduction of the variable: \n{msg}."""
 
 
 def declaration_and_variable_are_together(
     statements: parserResult,
-) -> (
-    list[DeclarationNotFollowedByDefinition | DefinitionWithoutDeclaration]
-    | None
-):
+) -> list[DeclarationNotFollowedByDefinition | DefinitionWithoutDeclaration]:
     errors: list[
         DeclarationNotFollowedByDefinition | DefinitionWithoutDeclaration
     ] = []
@@ -127,10 +132,8 @@ def declaration_and_variable_are_together(
         else:
             errors.append(DefinitionWithoutDeclaration(maybe_declaration))
             statements = statements[1:]
-    if errors:
-        return errors
-    else:
-        return None
+
+    return errors
 
 
 def split_definitions_and_declarations(
@@ -157,7 +160,7 @@ def split_definitions_and_declarations(
 def multiple_declarations_or_definitions(
     definitions: dict[str, list[Definition]],
     declarations: dict[str, list[Declaration]],
-) -> list[MultipleDeclaration | MultipleDefinition] | None:
+) -> list[MultipleDeclaration | MultipleDefinition]:
     errors1 = [
         MultipleDefinition(v) for k, v in definitions.items() if len(v) > 1
     ]
@@ -170,7 +173,7 @@ def multiple_declarations_or_definitions(
 
 def no_use_of_undefined_variables(
     definitions: dict[str, list[Definition]]
-) -> list[UseOfUndefinedVariable] | None:
+) -> list[UseOfUndefinedVariable]:
     errors = []
     for name, defs in definitions.items():
         for definition in defs:
@@ -178,10 +181,7 @@ def no_use_of_undefined_variables(
             for var in free:
                 if var.name not in definitions:
                     errors.append(UseOfUndefinedVariable(var, definition))
-    if errors:
-        return errors
-    else:
-        return None
+    return errors
 
 
 def no_shadowing_in_expression(
@@ -252,14 +252,19 @@ def no_shadowing_in_definition(
     )
 
 
-def no_shadowing(
-    definitions: dict[str, list[Definition]]
-) -> list[Shadowing] | None:
+def no_shadowing(definitions: dict[str, list[Definition]]) -> list[Shadowing]:
     errors: list[Shadowing] = []
     for name, defs in definitions.items():
         for definition in defs:
             errors += no_shadowing_in_definition(definition, definitions)
-    if errors:
-        return errors
-    else:
-        return None
+    return errors
+
+
+def non_type_checks(statements: parserResult) -> list[CheckError]:
+    definitions, declarations = split_definitions_and_declarations(statements)
+    return (
+        declaration_and_variable_are_together(statements)
+        + multiple_declarations_or_definitions(definitions, declarations)
+        + no_use_of_undefined_variables(definitions)
+        + no_shadowing(definitions)
+    )
