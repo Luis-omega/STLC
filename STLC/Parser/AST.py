@@ -23,6 +23,12 @@ class Variable(HasRange):
     def pretty(self) -> str:
         return self.name
 
+    def free_variables(self) -> list["Variable"]:
+        return [self]
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and self.name == other.name
+
 
 @dataclass
 class BoolLiteral(HasRange):
@@ -30,6 +36,9 @@ class BoolLiteral(HasRange):
 
     def pretty(self) -> str:
         return str(self.value)
+
+    def free_variables(self) -> list["Variable"]:
+        return []
 
 
 @dataclass
@@ -39,11 +48,29 @@ class IntLiteral(HasRange):
     def pretty(self) -> str:
         return str(self.value)
 
+    def free_variables(self) -> list["Variable"]:
+        return []
+
 
 @dataclass
 class UnitLiteral(HasRange):
     def pretty(self) -> str:
         return "unit"
+
+    def free_variables(self) -> list["Variable"]:
+        return []
+
+
+def union(vars1: list[Variable], vars2: list[Variable]) -> list[Variable]:
+    new_list = vars2.copy()
+    for var in vars1:
+        if var not in vars2:
+            new_list.append(var)
+    return new_list
+
+
+def diference(vars1: list[Variable], vars2: list[Variable]) -> list[Variable]:
+    return [i for i in vars1 if i not in vars2]
 
 
 @dataclass
@@ -60,6 +87,9 @@ class Application(HasRange):
             return f"{self.left.pretty()} ({self.right.pretty()})"
         return f"{self.left.pretty()} {self.right.pretty()}"
 
+    def free_variables(self) -> list[Variable]:
+        return union(self.left.free_variables(), self.right.free_variables())
+
 
 @dataclass
 class OperatorApplication(HasRange):
@@ -70,6 +100,9 @@ class OperatorApplication(HasRange):
     def pretty(self) -> str:
         return f"({self.left.pretty()} {self.operator} {self.right.pretty()})"
 
+    def free_variables(self) -> list[Variable]:
+        return union(self.left.free_variables(), self.right.free_variables())
+
 
 @dataclass
 class Function(HasRange):
@@ -78,6 +111,11 @@ class Function(HasRange):
 
     def pretty(self) -> str:
         return f"\\ {self.argument.pretty()} -> {self.expression.pretty()}"
+
+    def free_variables(self) -> list[Variable]:
+        return diference(
+            self.expression.free_variables(), self.argument.free_variables()
+        )
 
 
 @dataclass
@@ -89,6 +127,15 @@ class If(HasRange):
     def pretty(self) -> str:
         return f"if {self.condition.pretty()} then {self.true_expression.pretty()} else {self.false_expression.pretty()}"
 
+    def free_variables(self) -> list[Variable]:
+        return union(
+            union(
+                self.condition.free_variables(),
+                self.true_expression.free_variables(),
+            ),
+            self.false_expression.free_variables(),
+        )
+
 
 @dataclass
 class Annotation(HasRange):
@@ -97,6 +144,9 @@ class Annotation(HasRange):
 
     def pretty(self) -> str:
         return f"({self.expression.pretty()} : {self.annotation.pretty()})"
+
+    def free_variables(self) -> list[Variable]:
+        return self.expression.free_variables()
 
 
 @dataclass
@@ -131,12 +181,15 @@ class Arrow(HasRange):
 @dataclass
 class Definition(HasRange):
     name: str
-    arguments: list[str]
+    arguments: list[Variable]
     expression: Expression
 
     def pretty(self) -> str:
-        arguments = " ".join(self.arguments)
+        arguments = " ".join((i.name for i in self.arguments))
         return f"{self.name} {arguments} = {self.expression.pretty()};"
+
+    def free_variables(self) -> list[Variable]:
+        return diference(self.expression.free_variables(), self.arguments)
 
 
 @dataclass

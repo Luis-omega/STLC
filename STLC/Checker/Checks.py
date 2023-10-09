@@ -1,0 +1,233 @@
+from typing import Union, TypeVar, Generic, reveal_type, Literal
+from dataclasses import dataclass
+
+from STLC.Parser.AST import (
+    Definition,
+    Declaration,
+    Variable,
+    Expression,
+    BoolLiteral,
+    IntLiteral,
+    UnitLiteral,
+    Application,
+    OperatorApplication,
+    Function,
+    If,
+    Annotation,
+)
+
+T = TypeVar("T")
+
+
+parserResult = list[Definition | Declaration]
+
+Definitions = dict[str, Definition]
+Declarations = dict[str, Declaration]
+
+
+@dataclass
+class DeclaredAndDefined:
+    declaration: Declaration
+    definition: Definition
+
+
+@dataclass
+class DeclarationNotFollowedByDefinition:
+    declaration: Declaration
+
+
+@dataclass
+class DefinitionWithoutDeclaration:
+    definition: Definition
+
+
+@dataclass
+class MultipleDefinition:
+    definitions: list[Definition]
+
+
+@dataclass
+class MultipleDeclaration:
+    declaration: list[Declaration]
+
+
+@dataclass
+class UseOfUndefinedVariable:
+    variable: Variable
+    definition: Definition
+
+
+def declaration_and_variable_are_together(
+    statements: parserResult,
+) -> (
+    list[DeclarationNotFollowedByDefinition | DefinitionWithoutDeclaration]
+    | None
+):
+    errors: list[
+        DeclarationNotFollowedByDefinition | DefinitionWithoutDeclaration
+    ] = []
+
+    while statements:
+        maybe_declaration = statements[0]
+        if isinstance(maybe_declaration, Declaration):
+            statements = statements[1:]
+            if statements:
+                maybe_definition = statements[0]
+                if isinstance(maybe_definition, Definition):
+                    if maybe_definition.name != maybe_declaration.name:
+                        errors.append(
+                            DeclarationNotFollowedByDefinition(
+                                maybe_declaration
+                            )
+                        )
+                        errors.append(
+                            DefinitionWithoutDeclaration(maybe_definition)
+                        )
+                    statements = statements[1:]
+                else:
+                    errors.append(
+                        DeclarationNotFollowedByDefinition(maybe_declaration)
+                    )
+            else:
+                errors.append(
+                    DeclarationNotFollowedByDefinition(maybe_declaration)
+                )
+        else:
+            errors.append(DefinitionWithoutDeclaration(maybe_declaration))
+            statements = statements[1:]
+    if errors:
+        return errors
+    else:
+        return None
+
+
+def split_definitions_and_declarations(
+    statements: parserResult,
+) -> tuple[dict[str, list[Definition]], dict[str, list[Declaration]]]:
+    definitions: dict[str, list[Definition]] = dict()
+    declarations: dict[str, list[Declaration]] = dict()
+
+    def add_to(d: dict[str, list[T]], name: str, value: T) -> None:
+        old = d.get(name, None)
+        if old is None:
+            d[name] = [value]
+        else:
+            old.append(value)
+
+    for statement in statements:
+        if isinstance(statement, Declaration):
+            add_to(declarations, statement.name, statement)
+        elif isinstance(statement, Definition):
+            add_to(definitions, statement.name, statement)
+    return (definitions, declarations)
+
+
+def multiple_declarations_or_definitions(
+    definitions: dict[str, list[Definition]],
+    declarations: dict[str, list[Declaration]],
+) -> list[MultipleDeclaration | MultipleDefinition] | None:
+    errors1 = [
+        MultipleDefinition(v) for k, v in definitions.items() if len(v) > 1
+    ]
+    errors2 = [
+        MultipleDeclaration(v) for k, v in declarations.items() if len(v) > 1
+    ]
+
+    return errors1 + errors2
+
+
+def no_use_of_undefined_variables(
+    definitions: dict[str, list[Definition]]
+) -> list[UseOfUndefinedVariable] | None:
+    errors = []
+    for name, defs in definitions.items():
+        for definition in defs:
+            free: list[Variable] = definition.free_variables()
+            for var in free:
+                if var.name not in definitions:
+                    errors.append(UseOfUndefinedVariable(var, definition))
+    if errors:
+        return errors
+    else:
+        return None
+
+
+def no_shadowing_in_expression(
+    expression: Expression,
+    definitions: dict[str, list[Definition]],
+    bounded_variables: list[Variable],
+) -> list[tuple[Variable, list[Definition] | Variable]]:
+    match expression:
+        case Variable() | BoolLiteral() | IntLiteral() | UnitLiteral():
+            return []
+        case Application(left=left, right=right):
+            return no_shadowing_in_expression(
+                left, definitions, bounded_variables
+            ) + no_shadowing_in_expression(
+                right, definitions, bounded_variables
+            )
+        case OperatorApplication(left=left, right=right):
+            return no_shadowing_in_expression(
+                left, definitions, bounded_variables
+            ) + no_shadowing_in_expression(
+                right, definitions, bounded_variables
+            )
+        case Function(argument=var, expression=expression):
+            errors: list[tuple[Variable, list[Definition] | Variable]] = []
+            if var.name in definitions:
+                errors.append((var, definitions[var.name]))
+            for var2 in bounded_variables:
+                if var.name == var2.name:
+                    errors.append((var, var2))
+            return errors + no_shadowing_in_expression(
+                expression, definitions, bounded_variables + [var]
+            )
+        case If(
+            condition=condition,
+            true_expression=true_expression,
+            false_expression=false_expression,
+        ):
+            return (
+                no_shadowing_in_expression(
+                    condition, definitions, bounded_variables
+                )
+                + no_shadowing_in_expression(
+                    true_expression, definitions, bounded_variables
+                )
+                + no_shadowing_in_expression(
+                    false_expression, definitions, bounded_variables
+                )
+            )
+        case Annotation(expression=expression):
+            return no_shadowing_in_expression(
+                expression, definitions, bounded_variables
+            )
+
+
+def no_shadowing_in_definition(
+    definition: Definition, definitions: dict[str, list[Definition]]
+) -> list[tuple[Variable, list[Definition] | Variable]]:
+    errors: list[tuple[Variable, list[Definition] | Variable]] = []
+    for i in range(len(definition.arguments)):
+        var = definition.arguments[i]
+        if var.name in definitions:
+            errors.append((var, definitions[var.name]))
+        for var2 in definition.arguments[i + 1 :]:
+            if var.name == var2.name:
+                errors.append((var, var2))
+    return errors + no_shadowing_in_expression(
+        definition.expression, definitions, definition.arguments
+    )
+
+
+def no_shadowing(
+    definitions: dict[str, list[Definition]]
+) -> list[tuple[Variable, list[Definition] | Variable]] | None:
+    errors: list[tuple[Variable, list[Definition] | Variable]] = []
+    for name, defs in definitions.items():
+        for definition in defs:
+            errors += no_shadowing_in_definition(definition, definitions)
+    if errors:
+        return errors
+    else:
+        return None

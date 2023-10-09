@@ -15,6 +15,14 @@ from STLC.Parser.Parser import (
 
 from STLC.Parser.Transformation import ToAST
 
+from STLC.Checker.Checks import (
+    declaration_and_variable_are_together,
+    split_definitions_and_declarations,
+    multiple_declarations_or_definitions,
+    no_use_of_undefined_variables,
+    no_shadowing,
+)
+
 
 def from_file(symbols: list[str], path: Path) -> None:
     try:
@@ -48,6 +56,40 @@ def from_string(symbols: list[str], value: str) -> None:
     print(40 * "-", "Transformed pretty", 40 * "-", "\n")
     for i in tranformed:
         print(i.pretty())
+    print(
+        40 * "-", "Declarations and variables must be together", 40 * "-", "\n"
+    )
+    maybe_davat_errors = declaration_and_variable_are_together(tranformed)
+    if maybe_davat_errors is None:
+        print("Not found")
+    else:
+        for i in maybe_davat_errors:
+            pprint(i)
+
+    definitions, declarations = split_definitions_and_declarations(tranformed)
+    print(40 * "-", "Multiple declarations", 40 * "-", "\n")
+    maybe_multiples = multiple_declarations_or_definitions(
+        definitions, declarations
+    )
+    if maybe_multiples is None:
+        print("Not found")
+    else:
+        for i in maybe_multiples:
+            pprint(i)
+    print(40 * "-", "Undefined variables", 40 * "-", "\n")
+    maybe_undefined = no_use_of_undefined_variables(definitions)
+    if maybe_undefined is None:
+        print("Not found")
+    else:
+        for i in maybe_undefined:
+            pprint(i)
+    print(40 * "-", "Shadowing", 40 * "-", "\n")
+    maybe_shadowing = no_shadowing(definitions)
+    if maybe_shadowing:
+        for i in maybe_shadowing:
+            pprint(i)
+    else:
+        print("Not found")
 
 
 def generate_arg_parser():

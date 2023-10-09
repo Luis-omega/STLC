@@ -178,7 +178,7 @@ class ToAST(Transformer):
         return Definition(
             mergeRanges(variable._range, token2Range(semicolon)),
             variable.name,
-            [i.name for i in arguments],
+            arguments,
             expression,
         )
 
