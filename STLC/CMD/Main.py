@@ -64,7 +64,7 @@ def from_string(symbols: list[str], value: str) -> None:
         print("Not found")
     else:
         for i in maybe_davat_errors:
-            pprint(i)
+            print(i.pretty())
 
     definitions, declarations = split_definitions_and_declarations(tranformed)
     print(40 * "-", "Multiple declarations", 40 * "-", "\n")
@@ -75,19 +75,19 @@ def from_string(symbols: list[str], value: str) -> None:
         print("Not found")
     else:
         for i in maybe_multiples:
-            pprint(i)
+            print(i.pretty())
     print(40 * "-", "Undefined variables", 40 * "-", "\n")
     maybe_undefined = no_use_of_undefined_variables(definitions)
     if maybe_undefined is None:
         print("Not found")
     else:
         for i in maybe_undefined:
-            pprint(i)
+            print(i.pretty())
     print(40 * "-", "Shadowing", 40 * "-", "\n")
     maybe_shadowing = no_shadowing(definitions)
     if maybe_shadowing:
         for i in maybe_shadowing:
-            pprint(i)
+            print(i.pretty())
     else:
         print("Not found")
 

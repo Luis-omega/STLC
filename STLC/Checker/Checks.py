@@ -16,6 +16,8 @@ from STLC.Parser.AST import (
     Annotation,
 )
 
+from STLC.Range import Range
+
 T = TypeVar("T")
 
 
@@ -25,36 +27,66 @@ Definitions = dict[str, Definition]
 Declarations = dict[str, Declaration]
 
 
-@dataclass
-class DeclaredAndDefined:
-    declaration: Declaration
-    definition: Definition
+def range2Report(r: Range) -> str:
+    return f"""At line {r.line_start}, column {r.column_start}."""
 
 
 @dataclass
 class DeclarationNotFollowedByDefinition:
     declaration: Declaration
 
+    def pretty(self) -> str:
+        return f"""Declaration of "{self.declaration.name}" is not followed by it's definition, every declaration must be followed of it's  declaration.\n{range2Report(self.declaration._range)}."""
+
 
 @dataclass
 class DefinitionWithoutDeclaration:
     definition: Definition
+
+    def pretty(self) -> str:
+        return f"""Definition of "{self.definition.name}" must be preceded of it's declaration.\n{range2Report(self.definition._range)}."""
 
 
 @dataclass
 class MultipleDefinition:
     definitions: list[Definition]
 
+    def pretty(self) -> str:
+        places = "\n".join([range2Report(i._range) for i in self.definitions])
+        return f"""Multiple definitions for "{self.definitions[0].name}" found.\n{places}"""
+
 
 @dataclass
 class MultipleDeclaration:
-    declaration: list[Declaration]
+    declarations: list[Declaration]
+
+    def pretty(self) -> str:
+        places = "\n".join([range2Report(i._range) for i in self.declarations])
+        return f"""Multiple declarations for "{self.declarations[0].name}" found.\n{places}"""
 
 
 @dataclass
 class UseOfUndefinedVariable:
     variable: Variable
     definition: Definition
+
+    def pretty(self) -> str:
+        return f"""Use of the undefined variable "{self.variable.name}" {range2Report(self.variable._range)} in declaration of "{self.definition.name}" {range2Report(self.definition._range)}"""
+
+
+@dataclass
+class Shadowing:
+    variable: Variable
+    place: list[Definition] | Variable
+
+    def pretty(self) -> str:
+        if isinstance(self.place, Variable):
+            msg = "Bound " + range2Report(self.place._range)
+        else:
+            msg = "Defined " + "\n".join(
+                [range2Report(i._range) for i in self.place]
+            )
+        return f"""The variable "{self.variable.name}" {range2Report(self.variable._range)} is shadowing the previous introduction of the variable: \n{msg}"""
 
 
 def declaration_and_variable_are_together(
@@ -156,7 +188,7 @@ def no_shadowing_in_expression(
     expression: Expression,
     definitions: dict[str, list[Definition]],
     bounded_variables: list[Variable],
-) -> list[tuple[Variable, list[Definition] | Variable]]:
+) -> list[Shadowing]:
     match expression:
         case Variable() | BoolLiteral() | IntLiteral() | UnitLiteral():
             return []
@@ -173,12 +205,12 @@ def no_shadowing_in_expression(
                 right, definitions, bounded_variables
             )
         case Function(argument=var, expression=expression):
-            errors: list[tuple[Variable, list[Definition] | Variable]] = []
+            errors: list[Shadowing] = []
             if var.name in definitions:
-                errors.append((var, definitions[var.name]))
+                errors.append(Shadowing(var, definitions[var.name]))
             for var2 in bounded_variables:
                 if var.name == var2.name:
-                    errors.append((var, var2))
+                    errors.append(Shadowing(var, var2))
             return errors + no_shadowing_in_expression(
                 expression, definitions, bounded_variables + [var]
             )
@@ -206,15 +238,15 @@ def no_shadowing_in_expression(
 
 def no_shadowing_in_definition(
     definition: Definition, definitions: dict[str, list[Definition]]
-) -> list[tuple[Variable, list[Definition] | Variable]]:
-    errors: list[tuple[Variable, list[Definition] | Variable]] = []
+) -> list[Shadowing]:
+    errors: list[Shadowing] = []
     for i in range(len(definition.arguments)):
         var = definition.arguments[i]
         if var.name in definitions:
-            errors.append((var, definitions[var.name]))
+            errors.append(Shadowing(var, definitions[var.name]))
         for var2 in definition.arguments[i + 1 :]:
             if var.name == var2.name:
-                errors.append((var, var2))
+                errors.append(Shadowing(var, var2))
     return errors + no_shadowing_in_expression(
         definition.expression, definitions, definition.arguments
     )
@@ -222,8 +254,8 @@ def no_shadowing_in_definition(
 
 def no_shadowing(
     definitions: dict[str, list[Definition]]
-) -> list[tuple[Variable, list[Definition] | Variable]] | None:
-    errors: list[tuple[Variable, list[Definition] | Variable]] = []
+) -> list[Shadowing] | None:
+    errors: list[Shadowing] = []
     for name, defs in definitions.items():
         for definition in defs:
             errors += no_shadowing_in_definition(definition, definitions)
