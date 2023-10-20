@@ -54,46 +54,46 @@ expression_atom : variable -> expression_atom_variable
   | INT_LITERAL  -> expression_atom_int
   | TRUE -> expression_atom_true
   | FALSE -> expression_atom_false 
-  | LAMBDA variable ARROW _expression -> expression_atom_lambda
-  | IF _expression THEN _expression ELSE _expression -> expression_atom_if
-  | LPAREN _expression RPAREN -> expression_atom_parens
-  | LPAREN _expression COLON _type RPAREN -> expression_atom_annotation
+  | LAMBDA variable ARROW expression -> expression_atom_lambda
+  | IF expression THEN expression ELSE expression -> expression_atom_if
+  | LPAREN expression RPAREN -> expression_atom_parens
+  | LPAREN expression COLON type RPAREN -> expression_atom_annotation
 
 expression_application : expression_atom -> expression_application_single
   | expression_atom expression_atom+
 
-_expression_operator{operators,next_expression}: next_expression (operators next_expression)+
-  | next_expression
+expression_operator{operators,next_expression}: next_expression (operators next_expression)+  ->  expression_operator
+  | next_expression -> expression_operator_single
 
 _multiplicative_operators: DIV | STAR
 
-_expression_multiplicative: _expression_operator{_multiplicative_operators,expression_application}
+?expression_multiplicative: expression_operator{_multiplicative_operators,expression_application}
 
 _additive_operators: PLUS | MINUS
 
-_expression_additive: _expression_operator{_additive_operators, _expression_multiplicative}
+?expression_additive: expression_operator{_additive_operators, expression_multiplicative}
 
 // This one has to be done by hand to forbid multiple uses of 
 // comparation operators at parsing time
 _order_operators : LEQ | GEQ | LE | GE
-_expression_order : _expression_additive _order_operators _expression_additive
-  | _expression_additive
+?expression_order : expression_additive _order_operators expression_additive
+  | expression_additive
 
 
 _comparative_operators: CMP | NEQ
-_expression_comparative : _expression_operator{_comparative_operators, _expression_order}
+?expression_comparative : expression_operator{_comparative_operators, expression_order}
 
-_expression_not :  _expression_operator{NOT,_expression_comparative}
+?expression_not :  expression_operator{NOT,expression_comparative}
 
-_expression_and : _expression_operator{AND, _expression_not}
+?expression_and : expression_operator{AND, expression_not}
 
-_expression_or : _expression_operator{OR,_expression_and}
+?expression_or : expression_operator{OR,expression_and}
 
-_expression : _expression_or
+?expression : expression_or
 
-type_arrow : _type ARROW _type
+type_arrow : type ARROW type
 
-type_parens: LPAREN _type RPAREN
+type_parens: LPAREN type RPAREN
 
 type_bool: BOOL
 
@@ -101,13 +101,13 @@ type_int: INT_TYPE
 
 type_unit: UNIT_TYPE
 
-_type : type_bool | type_int | type_unit | type_parens | type_arrow
+?type : type_bool | type_int | type_unit | type_parens | type_arrow
 
-variable_declaration : variable COLON _type SEMICOLON
+variable_declaration : variable COLON type SEMICOLON
 
 variables : variable+
 
-variable_definition : variable EQUAL _expression SEMICOLON -> variable_definition_alone
-  | variable variables EQUAL _expression SEMICOLON
+variable_definition : variable EQUAL expression SEMICOLON -> variable_definition_alone
+  | variable variables EQUAL expression SEMICOLON
 
 top : (variable_declaration | variable_definition)*

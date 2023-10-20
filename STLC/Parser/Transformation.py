@@ -106,7 +106,8 @@ class ToAST(Transformer):
         self, start: Expression, *remain: Expression | Token
     ) -> Expression:
         current: Expression = start
-        for i in range(len(remain), 2):
+        print(remain)
+        for i in range(0, len(remain), 2):
             # we can build a list with the right type for this, but
             # it would have a runtime overhead
             op: Token = remain[i]  # type:ignore
@@ -119,7 +120,10 @@ class ToAST(Transformer):
             )
         return current
 
-    def _expression_order(
+    def expression_operator_single(self, value: Expression) -> Expression:
+        return value
+
+    def expression_order(
         self, left: Expression, op: Token, right: Expression
     ) -> Expression:
         return OperatorApplication(
