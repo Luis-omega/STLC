@@ -10,7 +10,7 @@ COMMENT_REST_OF_LINE: /#[^\n]*/
 TRUE.2 : "True"
 FALSE.2 : "False"
 
-INT_LITERAL.2 : /-?[1-9][0-9_]*/ 
+INT_LITERAL.2 : /-?[1-9][0-9_]*/  | /0[0_]*/
 
 BOOL : "Bool"
 INT_TYPE : "Int" 
@@ -23,6 +23,7 @@ ELSE.2 : "else"
 LAMBDA : "\\"
 
 VARIABLE_CHARACTER: /[a-zA-Z_]/
+VARIABLE : VARIABLE_CHARACTER+
 
 ARROW : "->"
 COLON : ":"
@@ -46,7 +47,7 @@ OR : "|"
 NOT : "~"
 
 
-variable : VARIABLE_CHARACTER
+variable : VARIABLE
 
 
 expression_atom : variable -> expression_atom_variable
