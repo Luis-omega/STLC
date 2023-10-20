@@ -50,8 +50,8 @@ operator: "+" | "-" | "*" | "/" | "<" | ">" | "<=" | ">=" | "==" | "&" | "|" |"~
 
 type : "Bool" | "Int" | "Unit" | "(" type "->" type ")"
 
-variable_definition : variable "=" expression
-variable_declaration : variable ":" type
+variable_definition : variable "=" expression ";"
+variable_declaration : variable ":" type ";"
 ```
 
 ## Factorized Grammar for expression
